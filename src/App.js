@@ -13,6 +13,8 @@ function App() {
   const [password, setPassword] = useState("");
   const [serverMessage, setServerMessage] = useState("");
   const [cToken, setCToken] = useState("");
+  const [fToken, setFToken] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   // Track Auth State
   useEffect(() => {
@@ -87,6 +89,27 @@ function App() {
     }
   };
 
+  const handleShowFToken = async () => {
+    try {
+      const token = await user.getIdToken(); // get ID token from Firebase
+
+      setFToken(token);
+    } catch (error) {
+      setFToken("NO");
+      console.error("FToken Error:", error);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(fToken);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset "Copied!" message after 2 sec
+    } catch (err) {
+      console.error("Failed to copy!", err);
+    }
+  };
+
   return (
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
       <h1>Firebase Auth Demo</h1>
@@ -100,6 +123,15 @@ function App() {
             <pre style={{ background: "#f4f4f4", padding: "10px" }}>
               {serverMessage}
             </pre>
+          )}
+          <button onClick={handleShowFToken}>Show Token</button>
+          {fToken && (
+            <>
+              <pre style={{ background: "#f4f4f4", padding: "10px" }}>
+                {fToken}
+              </pre>
+              <button onClick={copyToClipboard}>Copy</button>
+            </>
           )}
           <button onClick={handleLogout} style={{ marginLeft: "1rem" }}>
             Logout
