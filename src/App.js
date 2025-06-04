@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from "react";
 import {
-  auth,
+  createAuth,
+  defaultConfig,
   signInWithEmailAndPassword,
   signInAnonymously,
   onAuthStateChanged,
 } from "./firebase";
 import { signInWithCustomToken, signOut } from "firebase/auth";
 
+// Initialize default Firebase auth
+const initialAuth = createAuth(defaultConfig);
+
 function App() {
+  const [auth, setAuth] = useState(initialAuth);
   const [user, setUser] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,14 +23,16 @@ function App() {
   const [clients, setClients] = useState([]);
   const [newClientName, setNewClientName] = useState("");
   const [newClientToken, setNewClientToken] = useState("");
+  const [newClientConfig, setNewClientConfig] = useState("");
 
   // Track Auth State
   useEffect(() => {
+    if (!auth) return undefined;
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
     });
     return () => unsubscribe();
-  }, []);
+  }, [auth]);
 
   useEffect(() => {
     const stored = localStorage.getItem("firebaseClients");
@@ -130,11 +137,22 @@ function App() {
   };
 
   const addClient = () => {
-    if (!newClientName || !newClientToken) return;
-    const updated = [...clients, { name: newClientName, token: newClientToken }];
+    if (!newClientName || !newClientToken || !newClientConfig) return;
+    let configObj;
+    try {
+      configObj = JSON.parse(newClientConfig);
+    } catch (e) {
+      console.error("Invalid config JSON", e);
+      return;
+    }
+    const updated = [
+      ...clients,
+      { name: newClientName, token: newClientToken, config: configObj },
+    ];
     persistClients(updated);
     setNewClientName("");
     setNewClientToken("");
+    setNewClientConfig("");
   };
 
   const removeClient = (index) => {
@@ -142,9 +160,11 @@ function App() {
     persistClients(updated);
   };
 
-  const signInClient = async (token) => {
+  const signInClient = async (client) => {
     try {
-      await signInWithCustomToken(auth, token);
+      const newAuth = createAuth(client.config);
+      setAuth(newAuth);
+      await signInWithCustomToken(newAuth, client.token);
     } catch (error) {
       console.error("SignInWithCustomToken Error:", error);
     }
@@ -218,7 +238,7 @@ function App() {
               <div key={idx} style={{ marginBottom: 8 }}>
                 <strong>{c.name}</strong>
                 <button
-                  onClick={() => signInClient(c.token)}
+                  onClick={() => signInClient(c)}
                   style={{ marginLeft: 8 }}
                 >
                   Sign In
@@ -243,6 +263,13 @@ function App() {
                 value={newClientToken}
                 onChange={(e) => setNewClientToken(e.target.value)}
                 style={{ marginRight: 8 }}
+              />
+              <textarea
+                placeholder="Firebase config JSON"
+                value={newClientConfig}
+                onChange={(e) => setNewClientConfig(e.target.value)}
+                style={{ marginRight: 8, display: "block", width: "100%" }}
+                rows={3}
               />
               <button onClick={addClient}>Add</button>
             </div>
