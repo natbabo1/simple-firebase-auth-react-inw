@@ -15,6 +15,9 @@ function App() {
   const [cToken, setCToken] = useState("");
   const [fToken, setFToken] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [clients, setClients] = useState([]);
+  const [newClientName, setNewClientName] = useState("");
+  const [newClientToken, setNewClientToken] = useState("");
 
   // Track Auth State
   useEffect(() => {
@@ -22,6 +25,17 @@ function App() {
       setUser(firebaseUser);
     });
     return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("firebaseClients");
+    if (stored) {
+      try {
+        setClients(JSON.parse(stored));
+      } catch (_) {
+        setClients([]);
+      }
+    }
   }, []);
 
   const handleSignInWithCustomToken = async () => {
@@ -110,6 +124,32 @@ function App() {
     }
   };
 
+  const persistClients = (list) => {
+    setClients(list);
+    localStorage.setItem("firebaseClients", JSON.stringify(list));
+  };
+
+  const addClient = () => {
+    if (!newClientName || !newClientToken) return;
+    const updated = [...clients, { name: newClientName, token: newClientToken }];
+    persistClients(updated);
+    setNewClientName("");
+    setNewClientToken("");
+  };
+
+  const removeClient = (index) => {
+    const updated = clients.filter((_, i) => i !== index);
+    persistClients(updated);
+  };
+
+  const signInClient = async (token) => {
+    try {
+      await signInWithCustomToken(auth, token);
+    } catch (error) {
+      console.error("SignInWithCustomToken Error:", error);
+    }
+  };
+
   return (
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
       <h1>Firebase Auth Demo</h1>
@@ -171,6 +211,41 @@ function App() {
             <button onClick={handleSignInWithCustomToken}>
               Go Custom Token
             </button>
+          </div>
+          <div>
+            <h2>Saved Clients</h2>
+            {clients.map((c, idx) => (
+              <div key={idx} style={{ marginBottom: 8 }}>
+                <strong>{c.name}</strong>
+                <button
+                  onClick={() => signInClient(c.token)}
+                  style={{ marginLeft: 8 }}
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => removeClient(idx)}
+                  style={{ marginLeft: 4 }}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            <div>
+              <input
+                placeholder="Name"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                style={{ marginRight: 8 }}
+              />
+              <input
+                placeholder="Token"
+                value={newClientToken}
+                onChange={(e) => setNewClientToken(e.target.value)}
+                style={{ marginRight: 8 }}
+              />
+              <button onClick={addClient}>Add</button>
+            </div>
           </div>
         </>
       )}

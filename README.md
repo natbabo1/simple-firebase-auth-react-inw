@@ -1,6 +1,11 @@
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+It provides a simple interface for testing protected APIs using Firebase
+authentication. You can log in with email/password, anonymously or with a
+custom token. Custom tokens can be saved as **clients** so they can be quickly
+used again later. Saved clients are persisted in your browser's local storage
+and can be removed from the interface.
 
 ## Available Scripts
 
