@@ -11,7 +11,7 @@ export const defaultConfig = {
   apiKey: "AIzaSyB1i2thHBG7NGM4JTPlT1L9wGP27nW8f5k",
   authDomain: "bwithyouinwza.firebaseapp.com",
   projectId: "bwithyouinwza",
-  storageBucket: "bwithyouinwza.firebasestorage.app",
+  storageBucket: "bwithyouinwza.appspot.com",
   messagingSenderId: "825667949714",
   appId: "1:825667949714:web:c644238659f4831d6fc24b",
 };
