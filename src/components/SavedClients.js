@@ -48,6 +48,17 @@ function SavedClients({ setAuth }) {
     persistClients(updated);
   };
 
+  const editClientToken = (index) => {
+    const current = clients[index];
+    const newToken = window.prompt("Enter new token", current.token);
+    if (newToken) {
+      const updated = clients.map((c, i) =>
+        i === index ? { ...c, token: newToken } : c
+      );
+      persistClients(updated);
+    }
+  };
+
   const signInClient = async (client) => {
     try {
       const newAuth = createAuth(client.config);
@@ -69,6 +80,9 @@ function SavedClients({ setAuth }) {
           </button>
           <button onClick={() => removeClient(idx)} style={{ marginLeft: 4 }}>
             Remove
+          </button>
+          <button onClick={() => editClientToken(idx)} style={{ marginLeft: 4 }}>
+            Edit Token
           </button>
         </div>
       ))}
